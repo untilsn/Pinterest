@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    user-select: none;
+  }
+}
+@layer components {
+  .page-container {
+    width: 100%;
+    padding: 0px 30px;
+    @apply mx-auto;
+  }
+}
