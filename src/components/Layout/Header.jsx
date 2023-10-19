@@ -1,9 +1,23 @@
 import React, { Fragment, useEffect, useRef, useState } from "react";
 import Menu from "../Auth/Menu";
+import useDebounce from "../../Hook/useDebounce";
+import { apiKey, fetcher } from "../../Config/ConfigApi";
+import useSWR from "swr";
 
 const Header = () => {
   const menuRef = useRef();
   const [showMenu, setShowMenu] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const searchDebounce = useDebounce(inputValue, 1000);
+  const [nextPage, setNextPage] = useState(1);
+
+  const [url, setUrl] = useState(
+    `https://api.unsplash.com/photos?page=${nextPage}&per_page=15&client_id=${apiKey}`
+  );
+  useEffect(() => {
+    const { data } = useSWR(url, fetcher);
+  }, []);
+
   useEffect(() => {
     function handleClickOutSide(e) {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -15,9 +29,29 @@ const Header = () => {
       document.removeEventListener("click", handleClickOutSide);
     };
   }, []);
+
+  useEffect(() => {
+    if (searchDebounce) {
+      setUrl(
+        `https://api.unsplash.com/search/photos?page=1&query=${searchDebounce}&client_id=${apiKey}`
+      );
+    } else {
+      setUrl(
+        `https://api.unsplash.com/photos?page=1&per_page=15&client_id=${apiKey}`
+      );
+    }
+  }, [searchDebounce, nextPage]);
+
+  const handleSearch = (e) => {
+    setInputValue(e.target.value);
+  };
+
+  const { data } = useSWR(url, fetcher);
+  if (!data) return;
+
   return (
     <Fragment>
-      <div className="page-container header fixed top-0 left-0 right-0  h-[72px] py-1 px-4 flex items-center gap-8">
+      <div className="bg-white  page-container header fixed top-0 left-0 right-0  h-[72px] py-1 px-4 flex items-center gap-8">
         <a href="" className="">
           <div className="max-w-[24px] h-[24px] ml-2">
             <img
@@ -52,7 +86,7 @@ const Header = () => {
           </span>{" "}
         </div>
         {/* search */}
-        <div className="rounded-[30px] bg-opacity-30 hover:bg-opacity-40 transition-all flex items-center w-full max-w-[950px] gap-4 bg-clr-gb-2 px-4 py-2">
+        <div className=" rounded-[30px] bg-opacity-30 hover:bg-opacity-40 transition-all flex items-center w-full max-w-[950px] gap-4 bg-clr-gb-2 px-4 py-2">
           <span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -70,13 +104,14 @@ const Header = () => {
             </svg>
           </span>
           <input
+            onChange={handleSearch}
             type="text"
             placeholder="Search"
             className="rounded-lg text-clr-page-bg placeholder:text-clr-page-bg   border-none outline-none w-full max-w-[950px] px-4 py-2 bg-transparent"
           />
         </div>
         {/* notificant */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
           <div>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -111,7 +146,7 @@ const Header = () => {
           </div>
 
           {/* auth */}
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-3 ">
             <div className="max-w-[24px] h-[24px]">
               <img
                 src="https://images.unsplash.com/photo-1682695795557-17447f921f79?ixlib=rb-4.0.3&ixid=M3wxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
@@ -145,6 +180,43 @@ const Header = () => {
                 </svg>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div>
+          <div className="flex gap-3 mt-32 page-container">
+            <div className="gap-5 columns-5 ">
+              {dataApi.results
+                ? dataApi.results.length > 0 &&
+                  dataApi.results.map((item) => (
+                    <div className="h-auto mx-auto " key={item.id}>
+                      <img
+                        src={item.urls.raw}
+                        alt=""
+                        className="object-cover w-full h-auto my-5 rounded-xl"
+                      />
+                    </div>
+                  ))
+                : dataApi.length > 0 &&
+                  dataApi.map((item) => (
+                    <div className="h-auto mx-auto " key={item.id}>
+                      <img
+                        src={item.urls.raw}
+                        alt=""
+                        className="object-cover w-full h-auto my-5 rounded-xl"
+                      />
+                    </div>
+                  ))}
+            </div>
+          </div>
+          <div className="text-center">
+            <button
+              onClick={() => setNextPage(nextPage + 1)}
+              className="p-4 text-lg bg-clr-blue rounded-xl"
+            >
+              Load More
+            </button>
           </div>
         </div>
       </div>
