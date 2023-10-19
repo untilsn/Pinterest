@@ -14,9 +14,6 @@ const Header = () => {
   const [url, setUrl] = useState(
     `https://api.unsplash.com/photos?page=${nextPage}&per_page=15&client_id=${apiKey}`
   );
-  useEffect(() => {
-    const { data } = useSWR(url, fetcher);
-  }, []);
 
   useEffect(() => {
     function handleClickOutSide(e) {
@@ -104,6 +101,7 @@ const Header = () => {
             </svg>
           </span>
           <input
+            value={inputValue}
             onChange={handleSearch}
             type="text"
             placeholder="Search"
@@ -187,9 +185,9 @@ const Header = () => {
         <div>
           <div className="flex gap-3 mt-32 page-container">
             <div className="gap-5 columns-5 ">
-              {dataApi.results
-                ? dataApi.results.length > 0 &&
-                  dataApi.results.map((item) => (
+              {data.results
+                ? data.results.length > 0 &&
+                  data.results.map((item) => (
                     <div className="h-auto mx-auto " key={item.id}>
                       <img
                         src={item.urls.raw}
@@ -198,8 +196,8 @@ const Header = () => {
                       />
                     </div>
                   ))
-                : dataApi.length > 0 &&
-                  dataApi.map((item) => (
+                : data.length > 0 &&
+                  data.map((item) => (
                     <div className="h-auto mx-auto " key={item.id}>
                       <img
                         src={item.urls.raw}
