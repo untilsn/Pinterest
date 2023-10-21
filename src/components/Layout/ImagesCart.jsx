@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import ImageHover from "./ImageHover";
 
 const ImagesCart = ({ items }) => {
-  const [favoriteImage, setFavoriteImage] = useState(Ơ);
+  const [favoriteImage, setFavoriteImage] = useState([]);
 
   return (
     <div>
       <div className="relative h-auto mx-auto group">
         <div className="absolute inset-0 z-40 w-full h-full p-4 transition-opacity opacity-0 group-hover:opacity-100 ">
-          <ImageHover item={items}></ImageHover>
+          <ImageHover></ImageHover>
         </div>
         <img
           src={items?.urls?.small}
