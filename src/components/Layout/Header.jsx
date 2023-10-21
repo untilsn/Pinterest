@@ -1,8 +1,14 @@
+import useSWR from "swr";
+import useDebounce from "../../Hook/useDebounce";
 import React, { Fragment, useEffect, useRef, useState } from "react";
 import Menu from "../Auth/Menu";
-import useDebounce from "../../Hook/useDebounce";
 import { apiKey, fetcher } from "../../Config/ConfigApi";
-import useSWR from "swr";
+import MainPage from "./MainPage";
+import { Outlet, Route, Routes } from "react-router-dom";
+import FavoriteImage from "../Auth/FavoriteImage";
+
+// Mặc định set tạm 10 item
+const ITEM_PER_PAGE = 12;
 
 const Header = () => {
   const menuRef = useRef();
@@ -10,10 +16,14 @@ const Header = () => {
   const [inputValue, setInputValue] = useState("");
   const searchDebounce = useDebounce(inputValue, 1000);
   const [nextPage, setNextPage] = useState(1);
+  const [fetchedData, setFetchedData] = useState([]);
+  const [queryData, setQueryData] = useState([]);
+  // Format lại api (nếu có searchDebounce thì fetch api seach còn lại thì fetch api list)
+  const fetchUrl = searchDebounce
+    ? `https://api.unsplash.com/search/photos?page=${nextPage}&query=${searchDebounce}&client_id=${apiKey}`
+    : `https://api.unsplash.com/photos?page=${nextPage}&per_page=${ITEM_PER_PAGE}&client_id=${apiKey}`;
 
-  const [url, setUrl] = useState(
-    `https://api.unsplash.com/photos?page=${nextPage}&per_page=15&client_id=${apiKey}`
-  );
+  // Handle click outside - cái này t ko đụng đến
 
   useEffect(() => {
     function handleClickOutSide(e) {
@@ -27,28 +37,29 @@ const Header = () => {
     };
   }, []);
 
+  // Chạy cái useEffect này nếu như có data thì useSWR trả ra
+  const { data, isLoading } = useSWR(fetchUrl, fetcher);
+  console.log(data);
+  // Sau đó check xem có searchDebounce hay ko co1 thì set vào cái state query vì data lúc này là của search api nên cần state riêng để lưu
+  // * Lưu ý state sẽ bị stale vì khi fetch api mới data mới sẽ ghi đè lên data cũ làm state bị stale
+  // -> Cách fix sử dụng 1 callback để clone lại state trước đó rồi add thêm state mới vào
+  // Fix được loadmore
   useEffect(() => {
-    if (searchDebounce) {
-      setUrl(
-        `https://api.unsplash.com/search/photos?page=1&query=${searchDebounce}&client_id=${apiKey}`
-      );
-    } else {
-      setUrl(
-        `https://api.unsplash.com/photos?page=1&per_page=15&client_id=${apiKey}`
-      );
+    if (data) {
+      if (searchDebounce) {
+        setQueryData((prevData) => [...prevData, ...data.results]);
+      } else {
+        setFetchedData((prevData) => [...prevData, ...data]);
+      }
     }
-  }, [searchDebounce, nextPage]);
+  }, [data, searchDebounce]);
 
-  const handleSearch = (e) => {
-    setInputValue(e.target.value);
-  };
-
-  const { data } = useSWR(url, fetcher);
-  if (!data) return;
-
+  // Thêm loading
+  if (isLoading) return <p>loading...</p>;
+  if (!data) return null;
   return (
     <Fragment>
-      <div className="bg-white  page-container header fixed top-0 left-0 right-0  h-[72px] py-1 px-4 flex items-center gap-8">
+      <header className="z-50 bg-white  page-container header fixed top-0 left-0 right-0  h-[72px] py-1 px-4 flex items-center gap-8">
         <a href="" className="">
           <div className="max-w-[24px] h-[24px] ml-2">
             <img
@@ -82,9 +93,13 @@ const Header = () => {
             </svg>
           </span>{" "}
         </div>
+
         {/* search */}
-        <div className=" rounded-[30px] bg-opacity-30 hover:bg-opacity-40 transition-all flex items-center w-full max-w-[950px] gap-4 bg-clr-gb-2 px-4 py-2">
-          <span>
+        <label
+          form="search-image"
+          className=" rounded-[30px] bg-opacity-30 hover:bg-opacity-40 transition-all flex items-center w-full max-w-[950px] gap-4 bg-clr-gb-2 px-4 py-2"
+        >
+          <span className="cursor-pointer">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -102,12 +117,14 @@ const Header = () => {
           </span>
           <input
             value={inputValue}
-            onChange={handleSearch}
+            onChange={(e) => setInputValue(e.target.value)}
             type="text"
+            id="search-image"
             placeholder="Search"
             className="rounded-lg text-clr-page-bg placeholder:text-clr-page-bg   border-none outline-none w-full max-w-[950px] px-4 py-2 bg-transparent"
           />
-        </div>
+        </label>
+
         {/* notificant */}
         <div className="flex items-center gap-4">
           <div>
@@ -180,44 +197,38 @@ const Header = () => {
             </div>
           </div>
         </div>
-      </div>
-      <div>
-        <div>
-          <div className="flex gap-3 mt-32 page-container">
-            <div className="gap-5 columns-5 ">
-              {data.results
-                ? data.results.length > 0 &&
-                  data.results.map((item) => (
-                    <div className="h-auto mx-auto " key={item.id}>
-                      <img
-                        src={item.urls.raw}
-                        alt=""
-                        className="object-cover w-full h-auto my-5 rounded-xl"
-                      />
-                    </div>
-                  ))
-                : data.length > 0 &&
-                  data.map((item) => (
-                    <div className="h-auto mx-auto " key={item.id}>
-                      <img
-                        src={item.urls.raw}
-                        alt=""
-                        className="object-cover w-full h-auto my-5 rounded-xl"
-                      />
-                    </div>
-                  ))}
+      </header>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <MainPage
+              imageData={fetchedData}
+              search={searchDebounce}
+              searchImageData={queryData}
+              newPage={setNextPage}
+            ></MainPage>
+          }
+        ></Route>
+        <Route
+          path="/favorite"
+          element={<FavoriteImage></FavoriteImage>}
+        ></Route>
+      </Routes>
+      <section>
+        <div className="w-full mx-auto mt-20 page-container">
+          <h1 className="text-3xl font-medium">Favorite Photos</h1>
+          <div className="w-full gap-5 mx-auto mt-20 columns-5">
+            <div>
+              <img
+                src="https://plus.unsplash.com/premium_photo-1697211174198-18da849f87c6?auto=format&fit=crop&q=80&w=2070&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                alt=""
+                className="w-full h-full mx-auto rounded-xl"
+              />
             </div>
           </div>
-          <div className="text-center">
-            <button
-              onClick={() => setNextPage(nextPage + 1)}
-              className="p-4 text-lg bg-clr-blue rounded-xl"
-            >
-              Load More
-            </button>
-          </div>
         </div>
-      </div>
+      </section>
     </Fragment>
   );
 };

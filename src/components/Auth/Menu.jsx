@@ -1,4 +1,5 @@
 import React from "react";
+import { NavLink } from "react-router-dom";
 
 const Menu = () => {
   return (
@@ -33,12 +34,18 @@ function MenuAccount() {
     <>
       <span className="px-2 text-sm font-light">Your Account</span>
       <div className="flex flex-col gap-2 mt-3 mb-5 font-medium">
-        <div className="px-2 py-2 transition-all hover:bg-slate-200 rounded-xl">
+        <NavLink
+          to="/"
+          className="px-2 py-2 transition-all hover:bg-slate-200 rounded-xl"
+        >
+          Home Page
+        </NavLink>
+        <NavLink
+          to="/favorite"
+          className="px-2 py-2 transition-all hover:bg-slate-200 rounded-xl"
+        >
           Your Favorite
-        </div>
-        <div className="px-2 py-2 transition-all hover:bg-slate-200 rounded-xl">
-          Convert to business
-        </div>
+        </NavLink>
       </div>
     </>
   );
