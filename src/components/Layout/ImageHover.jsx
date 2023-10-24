@@ -1,29 +1,21 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-const ImageHover = ({ item }) => {
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  const handleSave = () => {
-    // Lấy danh sách các mục đã lưu từ Local Storage (nếu có)
-    const savedItems = JSON.parse(localStorage.getItem("savedItems")) || [];
-
-    // Kiểm tra xem mục đã tồn tại trong danh sách hay chưa
-    const isItemSaved = savedItems.some(
-      (savedItem) => savedItem.id === item.id
-    );
-
-    if (!isItemSaved) {
-      // Nếu mục chưa tồn tại, thêm nó vào danh sách
-      savedItems.push(item);
-
-      // Lưu danh sách đã cập nhật vào Local Storage
-      localStorage.setItem("savedItems", JSON.stringify(savedItems));
-
-      setIsFavorite(!isFavorite);
+const ImageHover = ({ item, like }) => {
+  const [likedItems, setLikedItems] = useState([]);
+  if (likedItems === "") return;
+  const handleSave = (item) => {
+    const isExisted = likedItems.find((likedItem) => likedItem.id === item.id);
+    if (isExisted) {
+      const updatedLikedItems = likedItems.filter(
+        (likedItem) => likedItem.id !== item.id
+      );
+      localStorage.setItem("favorites", JSON.stringify(updatedLikedItems));
+      setLikedItems(updatedLikedItems);
     } else {
-    }
-    if ((isFavorite = false)) {
-      localStorage.removeItem("savedItems", JSON.stringify(savedItems));
+      const updatedLikedItems = [...likedItems, item];
+
+      localStorage.setItem("favorites", JSON.stringify(updatedLikedItems));
+      setLikedItems(updatedLikedItems);
     }
   };
 
@@ -31,11 +23,11 @@ const ImageHover = ({ item }) => {
     <div className="h-full">
       <div className="flex flex-col items-end justify-between h-full">
         <button
-          onClick={() => handleSave()}
+          onClick={() => handleSave(item)}
           className={`${
-            isFavorite
-              ? "bg-black bg-opacity-80 text-white hover:bg-opacity-100"
-              : "bg-red-600 hover:bg-red-700"
+            like
+              ? "bg-red-600 hover:bg-red-700"
+              : "bg-black bg-opacity-80 hover:bg-opacity-100"
           }   font-medium hover cursor-pointer inline-block px-4 py-2 text-white w-full max-w-[80px] text-center  favorite rounded-3xl`}
         >
           Save
