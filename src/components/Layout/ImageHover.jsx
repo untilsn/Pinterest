@@ -1,12 +1,42 @@
-import React from "react";
+import React, { useState } from "react";
 
-const ImageHover = () => {
+const ImageHover = ({ item }) => {
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  const handleSave = () => {
+    // Lấy danh sách các mục đã lưu từ Local Storage (nếu có)
+    const savedItems = JSON.parse(localStorage.getItem("savedItems")) || [];
+
+    // Kiểm tra xem mục đã tồn tại trong danh sách hay chưa
+    const isItemSaved = savedItems.some(
+      (savedItem) => savedItem.id === item.id
+    );
+
+    if (!isItemSaved) {
+      // Nếu mục chưa tồn tại, thêm nó vào danh sách
+      savedItems.push(item);
+
+      // Lưu danh sách đã cập nhật vào Local Storage
+      localStorage.setItem("savedItems", JSON.stringify(savedItems));
+
+      setIsFavorite(!isFavorite);
+    } else {
+    }
+    if ((isFavorite = false)) {
+      localStorage.removeItem("savedItems", JSON.stringify(savedItems));
+    }
+  };
+
   return (
     <div className="h-full">
       <div className="flex flex-col items-end justify-between h-full">
         <button
           onClick={() => handleSave()}
-          className="hover:bg-red-700 font-medium hover cursor-pointer inline-block px-4 py-2 text-white w-full max-w-[80px] text-center bg-red-600 favorite rounded-3xl"
+          className={`${
+            isFavorite
+              ? "bg-black bg-opacity-80 text-white hover:bg-opacity-100"
+              : "bg-red-600 hover:bg-red-700"
+          }   font-medium hover cursor-pointer inline-block px-4 py-2 text-white w-full max-w-[80px] text-center  favorite rounded-3xl`}
         >
           Save
         </button>

@@ -1,8 +1,11 @@
 import React from "react";
-import ImageHover from "./ImageHover";
 import ImagesCart from "./ImagesCart";
 
-const MainPage = ({ search, searchImageData, imageData, newPage }) => {
+const ImagePage = ({ search, searchImageData, imageData, newPage }) => {
+  const handleFavorite = (item) => {
+    console.log(item);
+  };
+
   return (
     <section>
       <div className="z-10 flex gap-3 mt-32 page-container">
@@ -14,6 +17,7 @@ const MainPage = ({ search, searchImageData, imageData, newPage }) => {
             ? searchImageData.length > 0 &&
               searchImageData.map((item, index) => (
                 <ImagesCart
+                  onClick={() => handleFavorite(item)}
                   key={`${item.id}_${index}`}
                   items={item}
                 ></ImagesCart>
@@ -42,4 +46,4 @@ const MainPage = ({ search, searchImageData, imageData, newPage }) => {
   );
 };
 
-export default MainPage;
+export default ImagePage;
